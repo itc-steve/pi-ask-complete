@@ -1,0 +1,62 @@
+{
+  "name": "@itc-steve/pi-ask-complete",
+  "version": "0.1.0",
+  "description": "Pi extension: bottom-panel ask_user + bash permission gate (Allow / Allow permanently / Deny with reason) writing ~/.pi/agent/permission.json",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "pi-coding-agent",
+    "ask-user",
+    "permissions",
+    "yolo"
+  ],
+  "author": {
+    "name": "itc-steve",
+    "url": "https://github.com/itc-steve"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itc-steve/pi-ask-complete.git"
+  },
+  "bugs": {
+    "url": "https://github.com/itc-steve/pi-ask-complete/issues"
+  },
+  "homepage": "https://github.com/itc-steve/pi-ask-complete#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "main": "./index.ts",
+  "files": [
+    "index.ts",
+    "src",
+    "permission.json.example",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --experimental-strip-types --test test/*.test.ts",
+    "prepublishOnly": "npm test"
+  },
+  "pi": {
+    "extensions": ["./index.ts"]
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "peerDependenciesMeta": {
+    "@earendil-works/pi-ai": { "optional": true },
+    "@earendil-works/pi-coding-agent": { "optional": true },
+    "@earendil-works/pi-tui": { "optional": true },
+    "typebox": { "optional": true }
+  }
+}
