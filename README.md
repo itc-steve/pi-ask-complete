@@ -103,15 +103,13 @@ Full starter list: `permission.json.example`.
 pi install npm:@itc-steve/pi-ask-complete
 ```
 
-Or from a local checkout:
+From a local checkout:
 
 ```bash
 pi install /path/to/pi-ask-complete
-# packages entry: "npm:@itc-steve/pi-ask-complete"
-# or: "../../Projects/pi-ask-complete"
 ```
 
-`/reload` after changes. `/permissions` shows current allows.
+Then `/reload`. `/permissions` shows current allows.
 
 ## `/yolo`
 
