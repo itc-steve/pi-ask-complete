@@ -1,5 +1,5 @@
 // ask_permission + automatic gate for bash / write / edit / sudo_run / sensitive reads.
-// Path wildcards: most-specific wins; equal score → deny.
+// Path wildcards: any matching deny wins; directory allows act like scoped yolo.
 // Prompt: Allow this | Allow for this session | Allow permanently | Deny with reason
 // Bash: every unit is checked; one prompt per tool call (not per unit).
 // Session remembers all ask-bases; permanent writes the primary base only.
@@ -54,12 +54,12 @@ function blockReason(
   if (kind === "path") {
     return (
       `Blocked by path rule for \`${label}\`. ` +
-      `Add a paths allow entry in permission.json to override.`
+      `Remove or narrow the matching deny in permission.json.`
     );
   }
   return (
     `Blocked by permission rule for \`${label}\`. ` +
-    `Add an allow entry in permission.json to override.` +
+    `Remove or narrow the matching deny in permission.json.` +
     (extra ? ` ${extra}` : "")
   );
 }

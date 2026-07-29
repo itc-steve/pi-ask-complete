@@ -76,27 +76,16 @@ export function globSpecificity(pattern: string): number {
   return suffix.replace(/[*?]/g, "").length;
 }
 
-/**
- * Most-specific matching rule wins, regardless of allow/deny. On an exact
- * specificity tie, deny wins (fail closed). Returns undefined when nothing
- * matches.
- */
+/** Any matching deny wins. Otherwise, any matching allow wins. */
 export function resolveRules(
   rules: ReadonlyArray<{ pattern: string; state: "allow" | "deny" }>,
   value: string,
 ): "allow" | "deny" | undefined {
-  let best: { state: "allow" | "deny"; score: number } | undefined;
+  let allowed = false;
   for (const rule of rules) {
     if (!matchGlob(rule.pattern, value)) continue;
-    const score = globSpecificity(rule.pattern);
-    if (
-      !best ||
-      score > best.score ||
-      // equal score → deny wins
-      (score === best.score && rule.state === "deny")
-    ) {
-      best = { state: rule.state, score };
-    }
+    if (rule.state === "deny") return "deny";
+    allowed = true;
   }
-  return best?.state;
+  return allowed ? "allow" : undefined;
 }

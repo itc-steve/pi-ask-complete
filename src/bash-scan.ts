@@ -280,6 +280,8 @@ export function cleanPathToken(token: string): string {
  */
 export function isUnresolvedPath(token: string): boolean {
   if (!token) return false;
+  // Bash expands ~user, but this gate only resolves the current user's ~/.
+  if (/^~[^/\s]+(?:\/|$)/.test(token)) return true;
   let i = 0;
   while (i < token.length) {
     const c = token[i]!;
@@ -361,6 +363,12 @@ export function pathArgs(command: string): string[] {
   // bare tokens (and if=/.git pathspec forms via cleanPathToken)
   for (const rawTok of src.split(/\s+/)) {
     if (!rawTok) continue;
+    // Attached option values commonly carry paths (`--file=.env`, `--chdir=/tmp`).
+    const optionValue = rawTok.match(/^--?[A-Za-z][A-Za-z0-9-]*=(.+)$/)?.[1];
+    if (optionValue) {
+      push(optionValue);
+      continue;
+    }
     // Keep if=.env visible to cleanPathToken (looksLikePath alone would skip `=`).
     if (/^(?:if|of|in|out|file|path|filename|dest|source)=/i.test(rawTok)) {
       push(rawTok);

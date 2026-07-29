@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.0
+
+- Path allows now act like directory-scoped YOLO for bash, write, and edit asks
+- Any matching bash or path deny now takes priority over every allow
+
 ## 0.1.0
 
 First public release.

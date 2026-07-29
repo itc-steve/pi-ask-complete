@@ -26,6 +26,7 @@ import {
   wrapperHasArgs,
 } from "./base-command.ts";
 import {
+  cleanPathToken,
   hasUnresolvedExpansion,
   isUnresolvedPath,
   pathArgs,
@@ -49,6 +50,24 @@ function resolvePathArg(arg: string, cwd: string): string {
   if (arg === "~") return homedir();
   if (arg.startsWith("~/")) return resolve(homedir(), arg.slice(2));
   return resolve(cwd, arg);
+}
+
+type ExecutionScope = { cwd: string; cdTarget?: string };
+
+/** Resolve one simple leading `cd path &&`; multiple/mid-chain cds are ambiguous. */
+function executionScope(command: string, cwd: string, units: string[]): ExecutionScope | undefined {
+  const cdUnits = units.filter((unit) => {
+    const effective = stripWrappers(unit) || unit;
+    return /^cd(?:\s|$)/.test(effective);
+  });
+  if (cdUnits.length === 0) return { cwd: resolve(cwd) };
+  if (cdUnits.length !== 1 || cdUnits[0] !== units[0]) return undefined;
+
+  const match = command.match(/^\s*cd\s+("[^"]*"|'[^']*'|[^\s;&|]+)\s*&&/);
+  if (!match?.[1]) return undefined;
+  const target = cleanPathToken(match[1]);
+  if (!target || target.startsWith("-") || isUnresolvedPath(target)) return undefined;
+  return { cwd: resolvePathArg(target, cwd), cdTarget: target };
 }
 
 function agentDir(): string {
@@ -251,19 +270,26 @@ export class PermissionStore {
       }
     }
 
-    // Path deny on the full line AND every unit (covers substitution bodies).
+    // Path deny on the full line and every unit (covers substitution bodies).
+    const scope = executionScope(command, cwd, units);
+    const effectiveCwd = normalizePath(scope?.cwd ?? resolve(cwd));
+    const cwdState = scope ? this.checkPath(effectiveCwd) : undefined;
     const pathCandidates = new Set<string>([
       ...pathArgs(command),
       ...units.flatMap((u) => pathArgs(u)),
     ]);
+    const actualPath = (arg: string): string => {
+      const base = scope?.cdTarget === cleanPathToken(arg) ? cwd : effectiveCwd;
+      return normalizePath(resolvePathArg(arg, base));
+    };
+    const pathIsAllowed = (arg: string): boolean =>
+      this.checkPath(actualPath(arg)) === "allow";
     for (const arg of pathCandidates) {
       // Literal token first (`$HOME/.env` matches **/.env as typed).
       if (this.checkPath(normalizePath(arg)) === "deny") {
         return { action: "deny", label: arg, kind: "path" };
       }
-      // Resolve ~/ and relative/`..` against cwd so `/etc/shadow` denies still hit.
-      const abs = resolvePathArg(arg, cwd);
-      if (normalizePath(abs) !== normalizePath(arg) && this.checkPath(normalizePath(abs)) === "deny") {
+      if (this.checkPath(actualPath(arg)) === "deny") {
         return { action: "deny", label: arg, kind: "path" };
       }
     }
@@ -292,6 +318,12 @@ export class PermissionStore {
       };
     }
 
+    // An allowed execution cwd acts like directory-scoped yolo only when every
+    // detected path stays allowed. Explicit path/bash denies above still win.
+    if (cwdState === "allow" && [...pathCandidates].every(pathIsAllowed)) {
+      return { action: "allow" };
+    }
+
     if (ask.length) {
       if (this.yoloOn) return { action: "allow" };
       return { action: "ask", units: ask };
@@ -315,7 +347,15 @@ export class PermissionStore {
 
   /** Rule lookup for a SINGLE command unit (no operators/substitutions). */
   checkUnit(command: string): RuleState {
-    const trimmed = command.trim();
+    let trimmed = command.trim();
+    for (let i = 0; i < 8; i++) {
+      const next = trimmed
+        .replace(/^(?:[!({]\s*|(?:then|do|else|if|while|until)\s+)/, "")
+        .replace(/\s*[)}]\s*$/, "")
+        .trim();
+      if (next === trimmed) break;
+      trimmed = next;
+    }
     // Peel env/strace/timeout/… so an allow-listed wrapper cannot launder the inner binary.
     // Bare `env` peels to "" → keep original so the wrapper itself can still allow.
     const peeled = stripWrappers(trimmed);
@@ -332,41 +372,27 @@ export class PermissionStore {
     // Never classify sudo/doas via the stripped inner binary (true; sudo id → id allow).
     if (/^(sudo|doas)$/i.test(rawBase)) return "deny";
 
-    if (rawBase && this.bash.has(rawBase)) {
-      const s = this.bash.get(rawBase)!;
-      if (s !== "ask") return s;
-    }
-
-    // Full-command subjects: resolved + normalized (e.g. strip `git -C path`)
+    // Full-command subjects: resolved + normalized (e.g. strip `git -C path`).
     const normalized = normalizeCommandForMatch(effective);
     const subjects =
       normalized !== effective ? [effective, normalized] : [effective];
-
-    for (const sub of subjects) {
-      if (this.bash.has(sub)) {
-        const s = this.bash.get(sub)!;
-        if (s !== "ask") return s;
-      }
-    }
-
     const base = baseCommand(effective);
-    if (base && base !== rawBase && this.bash.has(base)) {
-      const s = this.bash.get(base)!;
-      if (s !== "ask") return s;
-    }
 
-    // Wildcard patterns against full/normalized command, raw first token, base
+    // Check every matching rule so deny always beats allow, regardless of order
+    // or whether the allow matched a base and the deny matched a full command.
+    let configuredAllow = false;
     for (const [pattern, state] of this.bash) {
-      if (!pattern.includes("*") && !pattern.includes("?")) continue;
-      const hit =
-        subjects.some((sub) => matchGlob(pattern, sub)) ||
-        (rawBase ? matchGlob(pattern, rawBase) : false) ||
-        (base ? matchGlob(pattern, base) : false);
-      if (hit) {
-        if (state === "allow") return "allow";
-        if (state === "deny") return "deny";
-      }
+      const wildcard = pattern.includes("*") || pattern.includes("?");
+      const hit = wildcard
+        ? subjects.some((sub) => matchGlob(pattern, sub)) ||
+          (rawBase ? matchGlob(pattern, rawBase) : false) ||
+          (base ? matchGlob(pattern, base) : false)
+        : subjects.includes(pattern) || pattern === rawBase || pattern === base;
+      if (!hit) continue;
+      if (state === "deny") return "deny";
+      if (state === "allow") configuredAllow = true;
     }
+    if (configuredAllow) return "allow";
 
     // Session allow only upgrades ask → allow (never overrides deny).
     if ((base && this.sessionBash.has(base)) || (rawBase && this.sessionBash.has(rawBase))) {
@@ -390,18 +416,21 @@ export class PermissionStore {
     subject: string,
     filePath?: string,
   ): { state: RuleState; matched?: string } {
-    if (filePath) {
-      const pathState = this.checkPath(filePath);
-      if (pathState === "allow") return { state: "allow", matched: filePath };
-      if (pathState === "deny") return { state: "deny", matched: filePath };
-      if (this.sessionPaths.has(normalizePath(filePath))) {
-        return { state: "allow", matched: filePath };
-      }
-    }
-    const state =
+    const pathState = filePath ? this.checkPath(filePath) : undefined;
+    if (pathState === "deny") return { state: "deny", matched: filePath };
+
+    const toolState =
       toolName === "bash" ? this.checkBash(subject) : this.checkTool(toolName);
+    if (toolState === "deny") return { state: "deny" };
+
+    if (
+      filePath &&
+      (pathState === "allow" || this.sessionPaths.has(normalizePath(filePath)))
+    ) {
+      return { state: "allow", matched: filePath };
+    }
     // yolo already applied inside checkBash/checkTool (including glob asks).
-    return { state };
+    return { state: toolState };
   }
 
   isAllowed(toolName: string, subject: string, filePath?: string): boolean {

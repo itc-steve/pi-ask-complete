@@ -106,6 +106,14 @@ test("pathArgs finds bare and redirect targets", () => {
   assert.deepEqual(pathArgs("ls -la"), []); // -la is a flag
 });
 
+test("bash deny wins over every matching allow", () => {
+  const s = new PermissionStore("/tmp/pi-bash-deny-wins.json");
+  (s as any).bash.set("npx", "allow");
+  (s as any).bash.set("npx dangerous*", "deny");
+  assert.equal(s.checkBash("npx tsc --noEmit"), "allow");
+  assert.equal(s.checkBash("npx dangerous-package"), "deny");
+});
+
 test("chain bypass is closed: allowed prefix can't smuggle a denied command", () => {
   const s = new PermissionStore("/tmp/pi-nope-scan.json");
   // reach into private maps directly (no file)
@@ -123,21 +131,99 @@ test("chain bypass is closed: allowed prefix can't smuggle a denied command", ()
 test("bash path-deny scan blocks reading secrets via bash", () => {
   const s = new PermissionStore("/tmp/pi-nope-scan2.json");
   (s as any).bash.set("cat", "allow");
+  (s as any).bash.set("grep", "allow");
+  (s as any).bash.set("tar -t*", "allow");
   (s as any).pathRules = [{ pattern: "**/.env", state: "deny" }];
   assert.equal(s.checkBash("cat .env"), "deny");
   assert.equal(s.checkBash("cat readme.md"), "allow");
   assert.equal(s.checkBash("echo x > .env"), "deny");
+  assert.equal(s.checkBash("grep --file=.env README.md"), "deny");
+  assert.equal(s.checkBash("tar -t --file=.env"), "deny");
 });
 
-test("most-specific path rule wins over broad allow", () => {
+test("any matching path deny wins over allows", () => {
   const rules = [
     { pattern: "/home/you/Projects/**", state: "allow" as const },
     { pattern: "**/.env", state: "deny" as const },
     { pattern: "**/secrets/**", state: "deny" as const },
+    { pattern: "/home/you/Projects/app/.env", state: "allow" as const },
   ];
   assert.equal(resolveRules(rules, "/home/you/Projects/app/.env"), "deny");
   assert.equal(resolveRules(rules, "/home/you/Projects/app/secrets/k"), "deny");
   assert.equal(resolveRules(rules, "/home/you/Projects/app/src/main.ts"), "allow");
+});
+
+test("path allows act like directory-scoped yolo for bash asks", () => {
+  const path = `/tmp/pi-path-yolo-${process.pid}-${Date.now()}.json`;
+  writeFileSync(
+    path,
+    JSON.stringify({
+      bash: { rm: "deny" },
+      paths: {
+        "/home/you/Projects/**": "allow",
+        "**/.env": "deny",
+      },
+    }) + "\n",
+  );
+  const s = new PermissionStore(path);
+
+  assert.equal(s.checkBash("npx tsc --noEmit", { cwd: "/home/you/Projects/app" }), "allow");
+  assert.equal(
+    s.checkBash("cd /home/you/Projects/app && npx tsc --noEmit 2>&1 | head -20", {
+      cwd: "/home/you",
+    }),
+    "allow",
+  );
+  assert.equal(
+    s.checkBash("cd /home/you/Projects/app && cat README.md", { cwd: "/home/you" }),
+    "allow",
+  );
+  assert.equal(s.checkBash("npx tsc --noEmit", { cwd: "/home/you" }), "ask");
+  assert.equal(
+    s.checkBash("cp /tmp/out /home/you/Projects/app/out", { cwd: "/home/you" }),
+    "ask",
+  );
+  assert.equal(
+    s.checkBash("cd /tmp && touch outside.txt", { cwd: "/home/you/Projects/app" }),
+    "ask",
+  );
+  assert.equal(
+    s.checkBash("tar -xf /home/you/Projects/app/archive.tar", { cwd: "/tmp" }),
+    "ask",
+  );
+  assert.equal(s.checkBash("cat .*", { cwd: "/home/you/Projects/app" }), "ask");
+  assert.equal(s.checkBash("touch ~root/outside.txt", { cwd: "/home/you/Projects/app" }), "ask");
+  assert.equal(
+    s.checkBash("cd /home/you/Projects/app && cd - && touch outside.txt", { cwd: "/tmp" }),
+    "ask",
+  );
+  assert.equal(
+    s.checkBash("cd /home/you/Projects/c && touch ../../outside.txt", {
+      cwd: "/home/you/Projects/a/b",
+    }),
+    "ask",
+  );
+
+  // Explicit denies always beat a directory allow.
+  assert.equal(s.checkBash("rm build.log", { cwd: "/home/you/Projects/app" }), "deny");
+  assert.equal(s.checkBash("cat .env", { cwd: "/home/you/Projects/app" }), "deny");
+  assert.equal(s.checkBash("! rm build.log", { cwd: "/home/you/Projects/app" }), "deny");
+  assert.equal(s.checkBash("! ! rm build.log", { cwd: "/home/you/Projects/app" }), "deny");
+  assert.equal(s.checkBash("(rm build.log)", { cwd: "/home/you/Projects/app" }), "deny");
+  assert.equal(s.checkBash("((rm build.log))", { cwd: "/home/you/Projects/app" }), "deny");
+  assert.equal(
+    s.checkBash("if true; then rm build.log; fi", { cwd: "/home/you/Projects/app" }),
+    "deny",
+  );
+  assert.equal(
+    s.checkBash("if rm build.log; then :; fi", { cwd: "/home/you/Projects/app" }),
+    "deny",
+  );
+  assert.equal(s.checkBash("cd - && touch outside", { cwd: "/home/you/Projects/app" }), "ask");
+  assert.equal(
+    s.checkBash("command cd - && touch outside", { cwd: "/home/you/Projects/app" }),
+    "ask",
+  );
 });
 
 test("globSpecificity ranks literal chars above wildcards", () => {

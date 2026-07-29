@@ -16,8 +16,8 @@ Seeded `permission.json` allows non-destructive **explore / troubleshoot** comma
 out of the box (listing, read/print text, search, process/system info, network
 diagnostics, checksums, git read-only subcommands). `find`/`awk`/`curl`/`fd` etc are
 **ask** (not allow) — they are general exec engines.
-Path **deny** rules still block secret files even when the binary is allowed
-(`cat .env` → deny).
+Path **deny** rules still block secret files even when the binary or project
+directory is allowed (`cat .env` → deny).
 
 Still **ask** (not pre-allowed): writers and mutators — `rm`, `mv`, `cp`, `mkdir`,
 `touch`, `sed`, `tee`, `chmod`, package managers, `git push` / `commit` / `reset`,
@@ -40,9 +40,12 @@ Panel options: **Allow this** · **Allow for this session** · **Allow permanent
 ?     one char except /
 ```
 
-**Most-specific pattern wins.** The pattern that pins more of the filename tail
-takes precedence regardless of allow/deny, so `**/.env` **deny** beats a broad
-`Projects/**` **allow** for `Projects/app/.env`. Exact-specificity ties → deny wins.
+**Deny always wins.** If any matching path rule is `deny`, no `allow` can
+override it. Otherwise, a matching directory `allow` acts like path-scoped YOLO:
+bash asks running in that directory, plus writes and edits there, are approved
+automatically. A command that starts with `cd` into an allowed directory is also
+approved when all detected path arguments are allowed. Bash deny rules and path
+deny rules still block it.
 
 Bash commands are decomposed for **policy**: chains (`;` `|` `&&`) and substitutions
 each become a unit that must independently pass. Path-like args are checked against

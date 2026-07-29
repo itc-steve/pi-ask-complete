@@ -38,7 +38,7 @@ test("**/.env matches nested .env only", () => {
   assert.equal(matchGlob("**/.env", "/home/u/proj/.env.example"), false);
 });
 
-test("most-specific path rule wins when both match (.env.example over *.env)", () => {
+test("non-overlapping .env example allows coexist with .env denies", () => {
   const rules = [
     { pattern: "**/*.env", state: "deny" as const },
     { pattern: "**/.env.example", state: "allow" as const },
@@ -71,9 +71,24 @@ test("PermissionStore reads rules only from JSON (no code defaults)", () => {
     assert.equal(empty.decide("bash", "sudo rm").state, "deny");
 
     store.allowPermanently("write", "write", "/home/u/app/.env");
-    assert.equal(store.checkPath("/home/u/app/.env"), "allow");
+    assert.equal(store.checkPath("/home/u/app/.env"), "deny");
     const disk = JSON.parse(readFileSync(path, "utf-8"));
     assert.equal(disk.paths["/home/u/app/.env"], "allow");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("tool deny wins over a path allow", () => {
+  const dir = mkdtempSync(join(tmpdir(), "pi-ask-deny-wins-"));
+  const path = join(dir, "permission.json");
+  writeFileSync(
+    path,
+    JSON.stringify({ tools: { write: "deny" }, paths: { "/work/**": "allow" } }),
+  );
+  try {
+    const store = new PermissionStore(path);
+    assert.equal(store.decide("write", "write", "/work/file.ts").state, "deny");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
