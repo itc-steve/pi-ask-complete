@@ -1236,7 +1236,7 @@ export class AskUserResultView implements Component {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Shared runners — used by ask_user tool and the permission gate
+// ask_user runner and result serialization
 // ────────────────────────────────────────────────────────────────────────────
 
 export function sanitizeQuestions(

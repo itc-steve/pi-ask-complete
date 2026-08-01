@@ -22,18 +22,18 @@ test("unviewed: emits active true then false around fn", async () => {
   _setIsViewedForTest(async () => false);
   const events = capture();
 
-  const out = await withHerdrBlocked("Permission needed", async () => {
+  const out = await withHerdrBlocked("Waiting for your answer", async () => {
     assert.equal(events.length, 1);
     assert.deepEqual(events[0], {
       name: "herdr:blocked",
-      data: { active: true, label: "Permission needed" },
+      data: { active: true, label: "Waiting for your answer" },
     });
     return 42;
   });
 
   assert.equal(out, 42);
   assert.deepEqual(events, [
-    { name: "herdr:blocked", data: { active: true, label: "Permission needed" } },
+    { name: "herdr:blocked", data: { active: true, label: "Waiting for your answer" } },
     { name: "herdr:blocked", data: { active: false } },
   ]);
   _setIsViewedForTest(undefined);
@@ -43,7 +43,7 @@ test("viewed: no emit (no ding while looking)", async () => {
   _setIsViewedForTest(async () => true);
   const events = capture();
 
-  const out = await withHerdrBlocked("Permission needed", async () => "ok");
+  const out = await withHerdrBlocked("Waiting for your answer", async () => "ok");
   assert.equal(out, "ok");
   assert.deepEqual(events, []);
   _setIsViewedForTest(undefined);

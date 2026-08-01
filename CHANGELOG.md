@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.0
+
+### Changed
+
+- Focused the package exclusively on model-guided `ask_user` questions and answers
+- Simplified package metadata and documentation around the single-purpose extension
+
+### Removed
+
+- Permission gates for `bash`, `read`, `write`, and `edit`
+- `ask_permission`, `/permissions`, and `/yolo`
+- Command/path policy parsing and `permission.json`
+- `sudo`/`doas` redirection
+
 ## 0.2.0
 
 - Path allows now act like directory-scoped YOLO for bash, write, and edit asks

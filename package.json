@@ -1,15 +1,15 @@
 {
   "name": "@itc-steve/pi-ask-complete",
-  "version": "0.2.0",
-  "description": "Pi extension: bottom-panel ask_user + bash permission gate (Allow / Allow permanently / Deny with reason) writing ~/.pi/agent/permission.json",
+  "version": "1.0.0",
+  "description": "Pi extension: model-guided ask_user questions in a bottom panel with the transcript kept visible",
   "keywords": [
     "pi-package",
     "pi",
     "pi-extension",
     "pi-coding-agent",
     "ask-user",
-    "permissions",
-    "yolo"
+    "questions",
+    "tui"
   ],
   "author": {
     "name": "itc-steve",
@@ -35,7 +35,6 @@
   "files": [
     "index.ts",
     "src",
-    "permission.json.example",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
