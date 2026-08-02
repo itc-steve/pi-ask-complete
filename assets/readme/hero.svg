@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1200 420" role="img" aria-labelledby="title desc">
+  <title id="title">pi-ask-complete</title>
+  <desc id="desc">Pi extension that puts model-guided ask_user questions in a bottom panel while the transcript stays visible.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1220"/>
+      <stop offset="100%" stop-color="#111827"/>
+    </linearGradient>
+    <linearGradient id="panelGlow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="420" rx="28" fill="url(#bg)"/>
+
+  <!-- soft grid motif -->
+  <g opacity="0.12" stroke="#94a3b8" stroke-width="1">
+    <path d="M60 90 H540"/>
+    <path d="M60 130 H480"/>
+    <path d="M60 170 H500"/>
+    <path d="M60 210 H420"/>
+  </g>
+
+  <!-- title block -->
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" fill="#e2e8f0">
+    <text x="64" y="86" font-size="20" fill="#38bdf8" letter-spacing="3">PI CODING AGENT EXTENSION</text>
+    <text x="64" y="156" font-size="56" font-weight="700">pi-ask-complete</text>
+    <text x="64" y="208" font-size="24" fill="#94a3b8">Model-guided questions in a bottom panel.</text>
+    <text x="64" y="246" font-size="24" fill="#94a3b8">Transcript stays visible.</text>
+  </g>
+
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="16" fill="#64748b">
+    <text x="64" y="304">tool  ask_user</text>
+    <text x="64" y="332">ui    bottom panel · tabs · multi-select</text>
+    <text x="64" y="360">out   structured JSON answers</text>
+  </g>
+
+  <!-- proof: TUI panel mock -->
+  <g transform="translate(620 48)">
+    <rect width="520" height="324" rx="16" fill="url(#panelGlow)" stroke="#334155" stroke-width="2"/>
+
+    <!-- title bar -->
+    <rect x="0" y="0" width="520" height="44" rx="16" fill="#1e293b"/>
+    <rect x="0" y="28" width="520" height="16" fill="#1e293b"/>
+    <circle cx="28" cy="22" r="6" fill="#ef4444" opacity="0.85"/>
+    <circle cx="50" cy="22" r="6" fill="#f59e0b" opacity="0.85"/>
+    <circle cx="72" cy="22" r="6" fill="#22c55e" opacity="0.85"/>
+    <text x="100" y="27" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" fill="#94a3b8">ask_user · Which layout?</text>
+
+    <!-- tabs -->
+    <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="15">
+      <rect x="20" y="58" width="88" height="30" rx="8" fill="#0ea5e9"/>
+      <text x="40" y="78" fill="#0b1220" font-weight="600">Layout</text>
+      <rect x="116" y="58" width="72" height="30" rx="8" fill="#1e293b" stroke="#334155"/>
+      <text x="134" y="78" fill="#94a3b8">Theme</text>
+      <rect x="196" y="58" width="78" height="30" rx="8" fill="#1e293b" stroke="#334155"/>
+      <text x="214" y="78" fill="#94a3b8">Review</text>
+    </g>
+
+    <!-- prompt -->
+    <text x="28" y="118" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="16" fill="#cbd5e1">Choose the default page layout.</text>
+
+    <!-- options -->
+    <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+      <!-- selected -->
+      <rect x="20" y="140" width="480" height="56" rx="10" fill="#0c4a6e" stroke="#38bdf8" stroke-width="2"/>
+      <circle cx="48" cy="168" r="8" fill="#38bdf8"/>
+      <circle cx="48" cy="168" r="3.5" fill="#0b1220"/>
+      <text x="68" y="164" font-size="18" font-weight="600" fill="#e0f2fe">Grid</text>
+      <text x="68" y="184" font-size="14" fill="#7dd3fc">Dense overview of many items.</text>
+
+      <!-- unselected -->
+      <rect x="20" y="208" width="480" height="56" rx="10" fill="#0f172a" stroke="#334155"/>
+      <circle cx="48" cy="236" r="8" fill="none" stroke="#64748b" stroke-width="2"/>
+      <text x="68" y="232" font-size="18" font-weight="600" fill="#e2e8f0">List</text>
+      <text x="68" y="252" font-size="14" fill="#94a3b8">More detail for each item.</text>
+
+      <!-- free-form -->
+      <rect x="20" y="276" width="480" height="30" rx="8" fill="#0f172a" stroke="#334155" stroke-dasharray="4 3"/>
+      <text x="40" y="296" font-size="14" fill="#64748b">Type something.</text>
+    </g>
+  </g>
+</svg>

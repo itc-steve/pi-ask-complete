@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 1200 220" role="img" aria-labelledby="title desc">
+  <title id="title">How it works</title>
+  <desc id="desc">Model calls ask_user, bottom panel collects answers, structured JSON returns to the model.</desc>
+  <rect width="1200" height="220" rx="22" fill="#0b1220"/>
+
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    <!-- step 1 -->
+    <rect x="40" y="48" width="300" height="124" rx="16" fill="#111827" stroke="#334155"/>
+    <text x="64" y="88" font-size="14" fill="#38bdf8" letter-spacing="2">01</text>
+    <text x="64" y="124" font-size="24" font-weight="700" fill="#e2e8f0">Model asks</text>
+    <text x="64" y="154" font-size="16" fill="#94a3b8">Calls ask_user with options</text>
+
+    <path d="M360 110 H400" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+    <path d="M390 98 L410 110 L390 122" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- step 2 -->
+    <rect x="420" y="48" width="300" height="124" rx="16" fill="#111827" stroke="#334155"/>
+    <text x="444" y="88" font-size="14" fill="#38bdf8" letter-spacing="2">02</text>
+    <text x="444" y="124" font-size="24" font-weight="700" fill="#e2e8f0">You choose</text>
+    <text x="444" y="154" font-size="16" fill="#94a3b8">Bottom panel, chat still open</text>
+
+    <path d="M740 110 H780" stroke="#38bdf8" stroke-width="3" stroke-linecap="round"/>
+    <path d="M770 98 L790 110 L770 122" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- step 3 -->
+    <rect x="800" y="48" width="360" height="124" rx="16" fill="#111827" stroke="#334155"/>
+    <text x="824" y="88" font-size="14" fill="#38bdf8" letter-spacing="2">03</text>
+    <text x="824" y="124" font-size="24" font-weight="700" fill="#e2e8f0">JSON returns</text>
+    <text x="824" y="154" font-size="16" fill="#94a3b8">Selections, custom text, skips</text>
+  </g>
+</svg>

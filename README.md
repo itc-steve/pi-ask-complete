@@ -1,13 +1,19 @@
 # pi-ask-complete
 
-Model-guided **ask_user** questions in a bottom panel for the [Pi coding agent](https://pi.dev).
+[![pi-ask-complete — model-guided ask_user questions in a bottom panel with the transcript kept visible](assets/readme/hero.svg)](assets/readme/hero.svg)
 
-The extension tells the model to use `ask_user` for decisions, preferences, confirmations, and clarifying questions instead of writing multiple-choice prompts in chat. It does not intercept, approve, deny, or modify other tool calls.
+Model-guided **`ask_user`** questions for the [Pi coding agent](https://pi.dev).
 
-## Features
+The extension tells the model to use `ask_user` for decisions, preferences, confirmations, and clarifying questions instead of dumping multiple-choice prompts into chat. Answers come back as structured JSON. The transcript stays visible the whole time.
+
+[![How it works: model asks → you choose in a bottom panel → JSON returns](assets/readme/how-it-works.svg)](assets/readme/how-it-works.svg)
+
+---
+
+[![Features](assets/readme/section-features.svg)](assets/readme/section-features.svg)
 
 - Single-select and multi-select questions
-- Free-form answers on every question
+- Free-form answers on every question (`Type something.`)
 - Optional descriptions and side-by-side previews
 - Multiple questions with tabs and a final review screen
 - Required or skippable questions
@@ -15,7 +21,9 @@ The extension tells the model to use `ask_user` for decisions, preferences, conf
 - Structured JSON answers returned to the model
 - Herdr attention notification when the panel waits in a background pane
 
-## Install
+---
+
+[![Install](assets/readme/section-install.svg)](assets/readme/section-install.svg)
 
 ```bash
 pi install npm:@itc-steve/pi-ask-complete
@@ -29,7 +37,9 @@ pi install /path/to/pi-ask-complete
 
 Run `/reload` after installation.
 
-## Model-facing tool
+---
+
+[![Usage](assets/readme/section-usage.svg)](assets/readme/section-usage.svg)
 
 ```ts
 ask_user({
@@ -48,16 +58,8 @@ ask_user({
 })
 ```
 
-Every question also includes a **Type something.** row. The tool returns structured JSON containing the user's selections, custom answers, skipped questions, cancellation state, and optional note.
+Every question also includes a **Type something.** row. The tool returns structured JSON with the user's selections, custom answers, skipped questions, cancellation state, and optional note.
 
-## Upgrade from 0.x
+## License
 
-Version 1.0 removes the permission system entirely:
-
-- No automatic gate for `bash`, `read`, `write`, or `edit`
-- No `ask_permission` tool
-- No `/permissions` or `/yolo` commands
-- No `permission.json` or path/command rules
-- No `sudo`/`doas` redirection
-
-Delete `~/.pi/agent/permission.json` if no other extension uses it. Pi and other installed extensions remain responsible for tool permissions.
+MIT

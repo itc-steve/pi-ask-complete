@@ -1,6 +1,6 @@
 {
   "name": "@itc-steve/pi-ask-complete",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Pi extension: model-guided ask_user questions in a bottom panel with the transcript kept visible",
   "keywords": [
     "pi-package",
